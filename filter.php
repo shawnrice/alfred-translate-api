@@ -3,7 +3,6 @@
 require_once( 'Alphred.phar' );
 require_once( 'languageCodes.php' );
 
-// , 'config_handler' => 'json'
 $alphred      = new Alphred( [ 'error_on_empty' => true ] );
 $separator    = '›';
 $set_language = "{$separator} set language {$separator}";
@@ -33,62 +32,84 @@ if ( empty( $api_key ) ) {
 	exit(0);
 }
 
+// We're doing this in order to make a nice pretty string to display
 $concat_languages = [];
 foreach ( $languages as $language ) :
 	array_push( $concat_languages, $codes[ $language ] );
 endforeach;
 $concat_languages = implode( ', ', $concat_languages );
 
+// No arguments are present, so display the initial options
 if ( ( ! isset( $argv[1] ) ) || ( empty( $argv[1] ) ) ) {
+	// Give them the queue to translate
 	$alphred->add_result([
 		'title' => 'Type to translate...',
 		'valid' => false,
 	]);
+	// Set translation languages option
 	$alphred->add_result([
-		'title'        => 'Set Target Languages',
+		'title'        => 'Set Translation Languages',
 		'autocomplete' => $set_language,
 		'subtitle'     => "Currently translating to `{$concat_languages}`",
 		'valid'        => false,
 	]);
+	// (Re)set the API key
 	$alphred->add_result([
-		'title'    => 'Translate: Set API Key',
+		'title'    => 'Set Google Translate API Key',
 		'subtitle' => 'API Key is currently set to "' . $api_key . '"',
 		'arg'      => json_encode( [ 'action' => 'set-api-key' ] ),
 		'valid'    => true,
 	]);
 
+	// Print the XML and exit
 	print $alphred->to_xml();
 	exit(0);
 }
 
+// Check if the argument is to set languages
 if ( false !== strpos( $argv[1], $set_language ) ) {
+	// Remove the command so we just have the query
 	$pos     = strpos( $argv[1], $set_language ) + strlen( $set_language );
 	$query   = trim( substr( $argv[1], $pos ) );
+	// Filter out non-matching languages is there is a query
 	$options = $alphred->filter( $codes, $query );
 
+	// Go through all the matching languages (or all if query is empty) and print them
 	foreach ( $options as $name ) :
+		// Get the code from the names
 		$code = array_search( $name, $codes );
 
 		$alphred->add_result([
+			// Add in a + to enable and a - to disable
 			'title'    => ( ( in_array( $code, $languages ) ) ? '- ' : ' + ' ) . $name,
+			// Clarify the enable/disable command
 			'subtitle' => ( ( in_array( $code, $languages ) ) ? 'Disable' : 'Enable') . " {$name} ({$code})",
 			'valid'    => true,
+			// Encode the arguments so that the action.php script can understand them
 			'arg'      => json_encode( [
+				// Main action
 				'action'    => 'set-language',
+				// Enable / disable subaction
 				'subaction' => ( in_array( $code, $languages ) ) ? 'disable' : 'enable',
+				// Language code
 				'code'      => $code
 			] ),
+			// Add in the pretty icon
 			'icon'     => "icons/{$code}.png",
 		]);
 	endforeach;
 
+	// Print the XML and leave
 	print $alphred->to_xml();
 	exit(0);
 }
 
+// If we've reached this point, then we're doing a translation.
 
+// The text to be translated
 $text = $argv[1];
 
+// Cycle through every enabled language and get a translation
 foreach ( $languages as $language ) :
 	// Base API url
 	$query  = 'https://www.googleapis.com/language/translate/v2?q=';
@@ -121,5 +142,6 @@ foreach ( $languages as $language ) :
 	]);
 endforeach;
 
+// Print the results and leave
 print $alphred->to_xml();
 exit(0);

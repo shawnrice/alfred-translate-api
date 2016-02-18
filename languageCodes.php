@@ -1,5 +1,6 @@
 <?php
 
+// These are the Google supported language codes and their names
 $codes = array(
 	'af'    => 'Afrikaans',
 	'sq'    => 'Albanian',
