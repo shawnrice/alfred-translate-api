@@ -9,7 +9,6 @@ $set_language = "{$separator} set language {$separator}";
 $set_api_key  = "{$separator} set api_key {$separator}";
 
 $languages = explode( ',', $alphred->config_read( 'languages' ) );
-$alphred->console( is_array( $languages ), 4 );
 
 if ( empty( $languages ) ) {
 	// If nothing is set, then we'll set the target language to French
