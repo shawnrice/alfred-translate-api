@@ -69,17 +69,15 @@ if ( false !== strpos( $argv[1], $set_language ) ) {
 	foreach ( $options as $name ) :
 		$code = array_search( $name, $codes );
 
-		if ( in_array( $code, $languages ) ) {
-			$subaction = 'enable';
-		} else {
-			$subaction = 'disable';
-		}
-
 		$alphred->add_result([
-			'title'    => $name,
-			'subtitle' => "Translate to {$name} ({$code})",
+			'title'    => ( ( in_array( $code, $languages ) ) ? '- ' : ' + ' ) . $name,
+			'subtitle' => ( ( in_array( $code, $languages ) ) ? 'Disable' : 'Enable') . " {$name} ({$code})",
 			'valid'    => true,
-			'arg'      => json_encode( [ 'action' => 'set-language', 'subaction' => $subaction, 'code' => $code ] ),
+			'arg'      => json_encode( [
+				'action'    => 'set-language',
+				'subaction' => ( in_array( $code, $languages ) ) ? 'disable' : 'enable',
+				'code'      => $code
+			] ),
 			'icon'     => "icons/{$code}.png",
 		]);
 	endforeach;
